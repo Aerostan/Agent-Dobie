@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldDesk — 5-Minute SMB Cyber Health Check</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #f5f0e8;
+    color: #2c2c2c;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: #1a2740;
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .logo span { color: #e05c3a; }
+  .btn-pdf {
+    background: #e05c3a;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.5px;
+  }
+  .btn-pdf:hover { background: #c44d2e; }
+
+  /* ── HERO ── */
+  .hero {
+    background: #1a2740;
+    color: #fff;
+    text-align: center;
+    padding: 50px 40px 40px;
+    border-bottom: 4px solid #e05c3a;
+  }
+  .hero .tag {
+    display: inline-block;
+    background: #e05c3a;
+    color: #fff;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+  .hero h1 em { color: #e05c3a; font-style: normal; }
+  .hero p {
+    font-size: 1.1rem;
+    color: #b0bec5;
+    max-width: 580px;
+    margin: 0 auto 10px;
+  }
+  .hero .meta {
+    font-size: 0.85rem;
+    color: #78909c;
+    margin-top: 16px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── INTRO BOX ── */
+  .intro-box {
+    background: #fff;
+    border-left: 5px solid #1a2740;
+    padding: 22px 26px;
+    margin-bottom: 36px;
+    border-radius: 0 4px 4px 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #444;
+  }
+  .intro-box strong { color: #1a2740; }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: #fff;
+    border-radius: 6px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    overflow: hidden;
+  }
+  .section-header {
+    background: #1a2740;
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    background: #e05c3a;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 1.05rem; letter-spacing: 0.5px; }
+  .section-body { padding: 20px 24px; }
+
+  /* ── QUESTION ── */
+  .question {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  .question:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .question p {
+    font-size: 0.97rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: #333;
+  }
+  .q-num {
+    display: inline-block;
+    background: #f0ece2;
+    color: #1a2740;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-right: 6px;
+  }
+  .scale {
+    display: flex;
+    gap: 10px;
+  }
+  .scale label {
+    flex: 1;
+    cursor: pointer;
+  }
+  .scale input[type="radio"] { display: none; }
+  .scale .option {
+    display: block;
+    text-align: center;
+    padding: 8px 6px;
+    border-radius: 4px;
+    border: 2px solid #ddd;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+    background: #fafafa;
+    line-height: 1.3;
+  }
+  .scale .option .score { font-size: 1.1rem; font-weight: bold; display: block; }
+  .scale .option .label-text { font-size: 0.72rem; color: #777; display: block; margin-top: 2px; }
+
+  .scale input[value="1"]:checked + .option { border-color: #e53935; background: #ffebee; }
+  .scale input[value="2"]:checked + .option { border-color: #f9a825; background: #fffde7; }
+  .scale input[value="3"]:checked + .option { border-color: #388e3c; background: #e8f5e9; }
+  .scale label:hover .option { border-color: #90a4ae; background: #f0f4f8; }
+
+  /* ── SCORE PANEL ── */
+  #score-panel {
+    position: sticky;
+    top: 20px;
+  }
+  .score-widget {
+    background: #1a2740;
+    color: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .score-widget .score-label {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #78909c;
+    margin-bottom: 8px;
+  }
+  .score-widget .score-num {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1;
+  }
+  .score-widget .score-max { font-size: 1rem; color: #78909c; }
+  .score-widget .score-bar-wrap {
+    background: #0d1a2b;
+    border-radius: 4px;
+    height: 10px;
+    margin: 16px 0 10px;
+    overflow: hidden;
+  }
+  .score-widget .score-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: #e05c3a;
+    transition: width 0.3s, background 0.3s;
+    width: 0%;
+  }
+  .risk-badge {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    background: #e05c3a;
+    color: #fff;
+  }
+  .risk-badge.moderate { background: #f9a825; color: #333; }
+  .risk-badge.good { background: #388e3c; }
+
+  .risk-message {
+    margin-top: 14px;
+    font-size: 0.88rem;
+    color: #b0bec5;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    background: #fff;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .progress-wrap .prog-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  .prog-bar-wrap {
+    background: #e0e0e0;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .prog-bar {
+    height: 100%;
+    background: #1a2740;
+    border-radius: 4px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  /* ── CTA ── */
+  .cta-box {
+    background: linear-gradient(135deg, #1a2740 0%, #243552 100%);
+    border-radius: 8px;
+    padding: 30px 28px;
+    text-align: center;
+    color: #fff;
+    margin-top: 36px;
+    border: 1px solid #e05c3a;
+  }
+  .cta-box h3 { font-size: 1.3rem; margin-bottom: 10px; }
+  .cta-box p { font-size: 0.9rem; color: #b0bec5; margin-bottom: 20px; line-height: 1.6; }
+  .cta-price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e05c3a;
+    margin-bottom: 18px;
+    display: block;
+  }
+  .btn-buy {
+    display: inline-block;
+    background: #e05c3a;
+    color: #fff;
+    padding: 14px 36px;
+    border-radius: 4px;
+    font-size: 1rem;
+    text-decoration: none;
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-buy:hover { background: #c44d2e; }
+  .cta-features {
+    list-style: none;
+    margin: 20px 0;
+    text-align: left;
+    display: inline-block;
+  }
+  .cta-features li {
+    font-size: 0.88rem;
+    color: #b0bec5;
+    padding: 4px 0;
+  }
+  .cta-features li::before { content: "✓ "; color: #388e3c; font-weight: bold; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #1a2740;
+    color: #546e7a;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    margin-top: 40px;
+  }
+
+  /* ── LAYOUT WITH STICKY SIDEBAR ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 30px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    #score-panel { position: static; }
+    .hero h1 { font-size: 1.8rem; }
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    header .btn-pdf, .cta-box { display: none; }
+    .section-card { break-inside: avoid; }
+    body { background: #fff; }
+    #score-panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Shield<span>Desk</span>.co</div>
+  <button class="btn-pdf" onclick="window.print()">⬇ Download PDF</button>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="tag">Free Cyber Health Check</div>
+  <h1>Is Your Business a <em>Sitting Duck?</em></h1>
+  <p>The ShieldDesk 5-Minute SMB Cyber Health Check — find out exactly where you stand before attackers find out for you.</p>
+  <div class="meta">20 questions · 5 minutes · Instant results · No technical knowledge required</div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT: QUESTIONS -->
+  <div id="questions-col">
+
+    <div class="intro-box">
+      <strong>How it works:</strong> Answer each question honestly based on your current situation — not where you'd like to be. Score each statement from <strong>1 (Not in place)</strong> to <strong>3 (Fully in place and documented)</strong>. Your score updates in real time on the right.
+    </div>
+
+    <!-- SECTION 1 -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Passwords &amp; Access Control</div>
+      </div>
+      <div class="section-body">
+        <div class="question">
+          <p><span class="q-num">Q1</span> Every system, account, and application used by our business has a unique, strong password — no shared or reused passwords.</p>
+          <div class="scale">
+            <label><input type="radio" name="q1" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q1" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q1" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q2</span> We use a business-grade password manager that all relevant staff have access to and actively use.</p>
+          <div class="scale">
+            <label><input type="radio" name="q2" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q2" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q2" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q3</span> Multi-factor authentication (MFA) is enabled on all critical systems — including email, banking, and cloud platforms.</p>
+          <div class="scale">
+            <label><input type="radio" name="q3" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q3" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q3" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q4</span> When a staff member leaves, their access to all systems is revoked within 24 hours — and we have a documented process for this.</p>
+          <div class="scale">
+            <label><input type="radio" name="q4" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q4" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q4" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Software &amp; Device Security</div>
+      </div>
+      <div class="section-body">
+        <div class="question">
+          <p><span class="q-num">Q5</span> All devices used for business — laptops, phones, tablets — are set to automatically install security updates.</p>
+          <div class="scale">
+            <label><input type="radio" name="q5" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q5" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q5" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q6</span> Active endpoint protection (antivirus/anti-malware) is installed and running on every business device.</p>
+          <div class="scale">
+            <label><input type="radio" name="q6" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q6" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q6" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q7</span> We maintain an up-to-date inventory of every device that connects to our business network or systems.</p>
+          <div class="scale">
+            <label><input type="radio" name="q7" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q7" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q7" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q8</span> Our office Wi-Fi is segmented — staff devices, guest devices, and operational systems are on separate networks.</p>
+          <div class="scale">
+            <label><input type="radio" name="q8" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q8" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q8" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Email &amp; Communications Security</div>
+      </div>
+      <div class="section-body">
+        <div class="question">
+          <p><span class="q-num">Q9</span> Our email domain is configured with SPF, DKIM, and DMARC records to prevent impersonation and email spoofing.</p>
+          <div class="scale">
+            <label><input type="radio" name="q9" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q9" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q9" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q10</span> All staff have received phishing awareness training in the last 12 months and know how to identify suspicious emails.</p>
+          <div class="scale">
+            <label><input type="radio" name="q10" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q10" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q10" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q11</span> We have a clear, documented process for staff to report suspicious emails — and staff actually use it.</p>
+          <div class="scale">
+            <label><input type="radio" name="q11" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q11" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q11" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q12</span> All payment change requests received by email must be verbally verified before any action is taken — this is a documented rule.</p>
+          <div class="scale">
+            <label><input type="radio" name="q12" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q12" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q12" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Suppliers &amp; Third-Party Access</div>
+      </div>
+      <div class="section-body">
+        <div class="question">
+          <p><span class="q-num">Q13</span> We maintain a documented list of every supplier and vendor that has access to our systems, data, or network.</p>
+          <div class="scale">
+            <label><input type="radio" name="q13" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q13" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q13" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q14</span> Our suppliers are contractually required to maintain security standards and notify us promptly in the event of a breach.</p>
+          <div class="scale">
+            <label><input type="radio" name="q14" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q14" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q14" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q15</span> Third parties are only given the minimum access they need to do their job — no blanket admin access.</p>
+          <div class="scale">
+            <label><input type="radio" name="q15" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q15" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q15" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q16</span> We regularly review who has third-party access to our systems and revoke it when it is no longer needed.</p>
+          <div class="scale">
+            <label><input type="radio" name="q16" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q16" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q16" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5 -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Backups &amp; Business Continuity</div>
+      </div>
+      <div class="section-body">
+        <div class="question">
+          <p><span class="q-num">Q17</span> We run automated daily backups of all critical business data to an offsite or cloud location.</p>
+          <div class="scale">
+            <label><input type="radio" name="q17" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q17" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q17" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q18</span> Our backups are isolated from our live systems — a ransomware attack could not reach and encrypt our backup copies.</p>
+          <div class="scale">
+            <label><input type="radio" name="q18" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q18" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q18" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q19</span> We have successfully restored data from our backup in the last 12 months — not just run a backup, but actually tested restoration.</p>
+          <div class="scale">
+            <label><input type="radio" name="q19" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q19" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q19" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+        <div class="question">
+          <p><span class="q-num">Q20</span> We have a documented business continuity plan that covers what to do if our systems are unavailable for 24–72 hours.</p>
+          <div class="scale">
+            <label><input type="radio" name="q20" value="1" onchange="calcScore()"><span class="option"><span class="score">1</span><span class="label-text">Not in place</span></span></label>
+            <label><input type="radio" name="q20" value="2" onchange="calcScore()"><span class="option"><span class="score">2</span><span class="label-text">Partially</span></span></label>
+            <label><input type="radio" name="q20" value="3" onchange="calcScore()"><span class="option"><span class="score">3</span><span class="label-text">Fully in place</span></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-box" id="cta">
+      <h3>Know Your Gaps. Now Close Them.</h3>
+      <p>The <strong>Shield Desk SMB Compliance Navigator</strong> takes you from awareness to action. A complete, self-directed compliance system built for US small business — no consultant required.</p>
+      <ul class="cta-features">
+        <li>Full NIST CSF 2.0-mapped compliance assessment</li>
+        <li>Live risk register across 5 attack vectors</li>
+        <li>Supplier risk register with ranked findings</li>
+        <li>72-hour incident response playbook</li>
+        <li>Templated letters &amp; government framework links</li>
+        <li>Generates a summary Compliance Report on completion</li>
+        <li>Save your completed document as PDF</li>
+      </ul>
+      <span class="cta-price">$127</span>
+      <br>
+      <a href="https://shielddesk.co/navigator" class="btn-buy">Get the Compliance Navigator →</a>
+      <p style="margin-top:14px; font-size:0.8rem; color:#546e7a;">One-time purchase. Instant access. Licensed for single business use.</p>
+    </div>
+
+  </div><!-- /questions-col -->
+
+  <!-- RIGHT: SCORE PANEL -->
+  <div id="score-panel">
+
+    <div class="progress-wrap">
+      <div class="prog-label">
+        <span>Questions answered</span>
+        <span id="prog-count">0 / 20</span>
+      </div>
+      <div class="prog-bar-wrap">
+        <div class="prog-bar" id="prog-bar"></div>
+      </div>
+    </div>
+
+    <div class="score-widget">
+      <div class="score-label">Your Score</div>
+      <div>
+        <span class="score-num" id="score-display">—</span>
+        <span class="score-max"> / 60</span>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar" id="score-bar"></div>
+      </div>
+      <div id="risk-badge" class="risk-badge" style="display:none;"></div>
+      <div id="risk-message" class="risk-message"></div>
+    </div>
+
+    <div style="background:#fff; border-radius:6px; padding:16px 18px; font-size:0.82rem; line-height:1.6; color:#555; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
+      <strong style="display:block; margin-bottom:8px; color:#1a2740;">Scoring Guide</strong>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="display:inline-block; width:12px; height:12px; background:#e53935; border-radius:2px; flex-shrink:0;"></span>
+        <span><strong>1 — Not in place</strong></span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="display:inline-block; width:12px; height:12px; background:#f9a825; border-radius:2px; flex-shrink:0;"></span>
+        <span><strong>2 — Partially in place</strong></span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+        <span style="display:inline-block; width:12px; height:12px; background:#388e3c; border-radius:2px; flex-shrink:0;"></span>
+        <span><strong>3 — Fully in place &amp; documented</strong></span>
+      </div>
+      <div style="border-top:1px solid #eee; padding-top:12px;">
+        <div style="margin-bottom:6px;"><span style="color:#e53935; font-weight:bold;">20–33</span> — High Risk</div>
+        <div style="margin-bottom:6px;"><span style="color:#f9a825; font-weight:bold;">34–46</span> — Moderate Risk</div>
+        <div><span style="color:#388e3c; font-weight:bold;">47–60</span> — Good Standing</div>
+      </div>
+    </div>
+
+  </div><!-- /score-panel -->
+
+</div><!-- /layout -->
+
+<footer>
+  © 2026 ShieldDesk.co — Cybersecurity Compliance for US Small Business — Confidential · Licensed for single business use
+</footer>
+
+<script>
+  function calcScore() {
+    var total = 0;
+    var answered = 0;
+    for (var i = 1; i <= 20; i++) {
+      var radios = document.getElementsByName('q' + i);
+      for (var j = 0; j < radios.length; j++) {
+        if (radios[j].checked) {
+          total += parseInt(radios[j].value);
+          answered++;
+          break;
+        }
+      }
+    }
+
+    // Progress
+    document.getElementById('prog-count').textContent = answered + ' / 20';
+    document.getElementById('prog-bar').style.width = (answered / 20 * 100) + '%';
+
+    // Score
+    var scoreDisplay = document.getElementById('score-display');
+    var scoreBar = document.getElementById('score-bar');
+    var badge = document.getElementById('risk-badge');
+    var msg = document.getElementById('risk-message');
+
+    if (answered === 0) {
+      scoreDisplay.textContent = '—';
+      scoreBar.style.width = '0%';
+      badge.style.display = 'none';
+      msg.textContent = '';
+      return;
+    }
+
+    scoreDisplay.textContent = total;
+    scoreBar.style.width = (total / 60 * 100) + '%';
+    badge.style.display = 'inline-block';
+
+    if (total <= 33) {
+      scoreBar.style.background = '#e53935';
+      badge.textContent = '⚠ HIGH RISK';
+      badge.className = 'risk-badge';
+      msg.textContent = 'Your business has significant gaps that make it a likely target. These aren\'t theoretical risks — they\'re the exact entry points attackers exploit most. Act urgently.';
+    } else if (total <= 46) {
+      scoreBar.style.background = '#f9a825';
+      badge.textContent = '◆ MODERATE RISK';
+      badge.className = 'risk-badge moderate';
+      msg.textContent = 'You have some foundations in place but meaningful gaps remain. A focused 90-day plan would significantly reduce your exposure and satisfy most insurer requirements.';
+    } else {
+      scoreBar.style.background = '#388e3c';
+      badge.textContent = '✓ GOOD STANDING';
+      badge.className = 'risk-badge good';
+      msg.textContent = 'You\'re ahead of most SMBs. The next step is formalising and documenting your controls so you can prove it to insurers, clients, and regulators.';
+    }
+
+    // Scroll CTA into gentle view if complete
+    if (answered === 20) {
+      document.getElementById('cta').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+</script>
+
+</body>
+</html>
